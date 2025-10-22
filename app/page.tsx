@@ -272,6 +272,17 @@ export default function Home() {
     });
   }
 
+  function removeCourseFromSchedule(deptCode: string, courseNum: string, section: string) {
+    const key = `${deptCode.toLowerCase()}::${courseNum.toLowerCase()}::${section.toLowerCase()}`;
+    setSchedule((prev) => {
+      const next = prev.filter((it) => `${it.dept.toLowerCase()}::${it.number.toLowerCase()}::${it.section.toLowerCase()}` !== key);
+      if (next.length !== prev.length) {
+        setA11yMsg(`Removed ${deptCode.toUpperCase()} ${courseNum.toUpperCase()} ${section.toUpperCase()} from schedule.`);
+      }
+      return next;
+    });
+  }
+
   const [loading, setLoading] = React.useState<{ [k: string]: boolean }>({});
   const [outlineOpen, setOutlineOpen] = React.useState(false);
   const [outline, setOutline] = React.useState<SfuOutline | { error: string } | null>(null);
@@ -1236,12 +1247,35 @@ export default function Home() {
             const dayNames: Record<string, string> = { Mo: 'Mon', Tu: 'Tue', We: 'Wed', Th: 'Thu', Fr: 'Fri', Sa: 'Sat', Su: 'Sun' };
             return (
               <div>
-                <div className="grid grid-cols-7 text-center text-xs text-zinc-600">
+                {/* Header with time gutter */}
+                <div className="grid text-xs text-zinc-600" style={{ gridTemplateColumns: '60px repeat(7, minmax(0,1fr))' }}>
+                  <div className="py-1 pl-1 text-left">Time</div>
                   {DOW.map((d) => (
-                    <div key={d} className="py-1 font-medium">{dayNames[d]}</div>
+                    <div key={d} className="py-1 text-center font-medium">{dayNames[d]}</div>
                   ))}
                 </div>
-                <div className="grid grid-cols-7 gap-2">
+                {/* Grid with time gutter + 7 days */}
+                <div className="grid gap-2" style={{ gridTemplateColumns: '60px repeat(7, minmax(0,1fr))' }}>
+                  {/* Time gutter (labels) */}
+                  <div className="relative h-[560px]" aria-hidden="true">
+                    {(() => {
+                      const hourLabel = (h: number) => {
+                        const ampm = h >= 12 ? 'PM' : 'AM';
+                        const hh = h % 12 === 0 ? 12 : h % 12;
+                        return `${hh} ${ampm}`;
+                      };
+                      return Array.from({ length: 13 }).map((_, i) => (
+                        <div
+                          key={`tl-${i}`}
+                          className="absolute left-1 -translate-y-1/2 text-[10px] text-zinc-500"
+                          style={{ top: `${(i/12)*100}%` }}
+                        >
+                          {hourLabel(8 + i)}
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                  {/* Day columns */}
                   {DOW.map((d) => (
                     <div key={d} className="relative h-[560px] rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
                       {/* events */}
@@ -1322,6 +1356,15 @@ export default function Home() {
                           {campuses.length > 0 && <span> · {campuses.join(', ')}</span>}
                           {delivery && <span> · {delivery}</span>}
                         </div>
+                      </div>
+                      <div className="ml-3 shrink-0">
+                        <button
+                          className="rounded-md border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-2 py-1 text-xs hover:bg-red-100 dark:hover:bg-red-900/50"
+                          onClick={() => removeCourseFromSchedule(g.dept, g.number, g.section)}
+                          aria-label={`Remove ${g.dept.toUpperCase()} ${g.number.toUpperCase()} ${g.section} from schedule`}
+                        >
+                          Remove
+                        </button>
                       </div>
                     </li>
                   );
