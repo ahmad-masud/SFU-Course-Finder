@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -39,7 +40,11 @@ export default function RootLayout({
             </a>
           </div>
         </header>
-        <main id="main-content" className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+        <main id="main-content" className="mx-auto max-w-6xl px-4 py-6">
+          <Suspense fallback={<div className="text-sm text-zinc-600">Loading…</div>}>
+            {children}
+          </Suspense>
+        </main>
       </body>
     </html>
   );
